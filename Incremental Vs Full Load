@@ -1,0 +1,83 @@
+In an ETL (Extract, Transform, Load) pipeline, data loading strategies play a crucial role in determining how data is processed and transferred from source systems to target systems. The two primary loading strategies are Incremental Load and Full Load. Let's break down these concepts and see how they can be implemented in Azure Data Factory (ADF) with an example.
+
+### Incremental Load vs Full Load
+
+1. **Incremental Load**
+   - **Definition**: Incremental load involves only transferring the new or changed data since the last load. This approach is more efficient as it minimizes the amount of data transferred and processed.
+   - **Use Cases**: Ideal for scenarios where data changes frequently, and only a subset of data needs to be updated.
+   - **Benefits**: Reduces load time, minimizes resource usage, and improves overall efficiency.
+
+2. **Full Load**
+   - **Definition**: Full load involves transferring the entire dataset from the source to the target each time the ETL process runs. This approach is straightforward but can be resource-intensive.
+   - **Use Cases**: Suitable for scenarios where the dataset is small, changes infrequently, or where a complete refresh is needed.
+   - **Benefits**: Ensures the target dataset is always up-to-date with the source dataset.
+
+### Implementing Incremental Load and Full Load in Azure Data Factory (ADF)
+
+#### **1. Full Load Implementation in ADF**
+
+A full load in ADF involves copying all data from a source to a destination. Here’s a step-by-step guide:
+
+1. **Create a New Pipeline**:
+   - In the Azure Data Factory portal, navigate to the "Author" section and create a new pipeline.
+
+2. **Add a Copy Activity**:
+   - Drag a Copy Data activity onto the pipeline canvas.
+
+3. **Configure Source and Sink**:
+   - **Source**: Set up a dataset for the source data (e.g., an SQL database, blob storage). Define the connection and specify the query or table to copy.
+   - **Sink**: Set up a dataset for the destination data (e.g., another SQL database, data lake). Define the connection and specify the table or file path where the data will be copied.
+
+4. **Run the Pipeline**:
+   - Trigger the pipeline to run. The Copy Data activity will pull all data from the source and load it into the destination.
+
+#### **2. Incremental Load Implementation in ADF**
+
+Incremental load requires tracking changes since the last load. Here’s how you can set this up in ADF:
+
+1. **Create a New Pipeline**:
+   - Start by creating a new pipeline in the ADF portal.
+
+2. **Add a Lookup Activity**:
+   - Use a Lookup activity to query the last updated timestamp or tracking information from the destination data. This timestamp will help determine which records have changed.
+
+3. **Add a Copy Activity**:
+   - Drag a Copy Data activity onto the pipeline canvas.
+
+4. **Configure Source**:
+   - Set up the source dataset. Use a query that filters records based on the last updated timestamp or another incremental criterion. For example, if using SQL, your query might look like:
+     ```sql
+     SELECT * FROM SourceTable WHERE LastModifiedDate > @lastUpdatedTimestamp
+     ```
+   - Use pipeline parameters or variables to pass the last updated timestamp retrieved from the Lookup activity.
+
+5. **Configure Sink**:
+   - Set up the destination dataset where the incremental data will be loaded. This is similar to the full load setup, but the data written will only include changes.
+
+6. **Update Tracking Information**:
+   - After the Copy Data activity, use a Stored Procedure or another activity to update the tracking information in the destination system to reflect the latest load timestamp.
+
+7. **Run the Pipeline**:
+   - Trigger the pipeline to run. The Copy Data activity will only pull records that have changed since the last load.
+
+### Example Scenario
+
+**Scenario**: Suppose you have a database table `Sales` with a column `LastModifiedDate` that tracks when a record was last updated.
+
+**Full Load**:
+- Create a pipeline with a Copy Data activity.
+- Source dataset: SQL table `Sales`.
+- Sink dataset: Another SQL table or data lake.
+- The entire `Sales` table is copied.
+
+**Incremental Load**:
+- **Lookup Activity**: Query to get the last modified timestamp from the destination.
+- **Copy Activity**:
+  - Source dataset query:
+    ```sql
+    SELECT * FROM Sales WHERE LastModifiedDate > @lastModifiedTimestamp
+    ```
+  - Sink dataset: Target table.
+- **Update Tracking**: After the copy, run a Stored Procedure to update the last modified timestamp in the destination.
+
+By implementing these strategies, you can optimize data processing in ADF according to your specific needs and constraints.
