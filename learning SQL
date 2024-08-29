@@ -28,6 +28,16 @@ CASE STATEMENT
 The CASE statement always goes in the SELECT clause
 CASE must include the following components: WHEN, THEN, and END. ELSE is an optional component.
 
+inner join is the intersection of the two tables
+LEFT JOIN returns only unmatched rows from the left table, as well as matched rows in both tables.
+RIGHT JOIN returns only unmatched rows from the right table , as well as matched rows in both tables.
+FULL OUTER JOIN returns unmatched rows from both tables,as well as matched rows in both tables.
+
+SQL joins allow you to combine two datasets side-by-side, but UNION allows you to stack one dataset on top of the other
+UNION only appends distinct values
+
+
+
 
 
 
