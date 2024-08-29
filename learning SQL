@@ -14,5 +14,20 @@ AND allows you to select only rows that satisfy two conditions.
 OR allows you to select rows that satisfy either of two conditions.
 NOT allows you to select rows that do not match a certain condition.
 
-oRDER BY - sort data ,referred to as ascending order, and it's SQL's default.
+ORDER BY - sort data ,referred to as ascending order, and it's SQL's default.
+
+COUNT counts how many rows are in a particular column.
+SUM adds together all the values in a particular column.
+MIN and MAX return the lowest and highest values in a particular column, respectively.
+AVG calculates the average of a group of selected values.
+GROUP BY -SQL aggregate function like COUNT, AVG, and SUM have something in common: they all aggregate across the entire table
+
+HAVING - filter on aggregate columns
+CASE STATEMENT
+
+The CASE statement always goes in the SELECT clause
+CASE must include the following components: WHEN, THEN, and END. ELSE is an optional component.
+
+
+
 
