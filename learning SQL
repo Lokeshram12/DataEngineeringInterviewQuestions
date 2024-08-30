@@ -36,7 +36,15 @@ FULL OUTER JOIN returns unmatched rows from both tables,as well as matched rows 
 SQL joins allow you to combine two datasets side-by-side, but UNION allows you to stack one dataset on top of the other
 UNION only appends distinct values
 
+data wrangling (or munging) is the process of programmatically transforming data into a format that makes it easier to work with.
 
+A window function performs a calculation across a set of table rows that are somehow related to the current row.
+
+RANK()
+ROW_NUMBER()
+DENSE_RANK()
+LEAD()
+LAG()
 
 
 
