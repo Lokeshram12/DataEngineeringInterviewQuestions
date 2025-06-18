@@ -1,0 +1,91 @@
+Here’s a side‑by‑side comparison of the three classic Slowly Changing Dimension (SCD) strategies, with examples and typical real‑world use‑cases:
+
+| Aspect               | SCD Type 1<br/>(Overwrite)                          | SCD Type 2<br/>(Full History)                                                  | SCD Type 3<br/>(Partial History)                                            |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| **Behavior**         | Overwrite the old attribute value with the new one. | Add a new row whenever an attribute changes (marking old row as “expired”).    | Add a new column to hold the prior value; overwrite the “current” column.   |
+| **History Kept?**    | No                                                  | Yes                                                                            | Only the immediate previous value (“one version back”).                     |
+| **Schema Impact**    | No schema change                                    | New rows; often extra columns for *EffectiveDate*, *ExpiryDate*, *CurrentFlag* | New attribute columns (e.g. *City\_Previous*, *City\_Current*)              |
+| **Key Structure**    | Natural or surrogate key stays the same             | Surrogate key (row ID) changes per version; business key stays constant        | Surrogate key stays the same; business key unchanged                        |
+| **Storage Growth**   | Minimal                                             | Highest (one row per history version)                                          | Moderate (two columns per tracked attribute)                                |
+| **Query Complexity** | Lowest                                              | Higher (must filter on current flag or date ranges; time‑travel queries)       | Moderate (simple for current vs previous; cannot go back beyond one change) |
+
+---
+
+## 1. SCD Type 1 (Overwrite)
+
+* **How it works**: Whenever a dimensional attribute changes, you simply overwrite the existing value.
+* **Example**:
+
+  ```sql
+  -- Before change:
+  CustomerID | Name        | City
+  -----------|-------------|---------
+  1001       | Alice Wong  | Seattle
+
+  -- After Alice moves to Boston (overwrite):
+  CustomerID | Name        | City
+  -----------|-------------|---------
+  1001       | Alice Wong  | Boston
+  ```
+* **Use‑Cases**:
+
+  * Attributes that should always reflect the latest truth (e.g. customer’s current email).
+  * When historical values aren’t important (e.g. product’s current display price in a clearance scenario).
+
+---
+
+## 2. SCD Type 2 (Full History)
+
+* **How it works**: On attribute change, “expire” the old row (set an end date or flag) and insert a new row with the new value and fresh effective date.
+* **Example**:
+
+  ```sql
+  -- Initial load:
+  SK | CustomerID | City     | EffectiveDate | ExpiryDate   | IsCurrent
+  ---|------------|----------|---------------|--------------|----------
+  1  | 1001       | Seattle  | 2024‑01‑01    | NULL         | Y
+
+  -- Alice moves to Boston on 2025‑06‑01:
+  -- Expire old:
+  SK | CustomerID | City     | EffectiveDate | ExpiryDate   | IsCurrent
+  ---|------------|----------|---------------|--------------|----------
+  1  | 1001       | Seattle  | 2024‑01‑01    | 2025‑05‑31   | N 
+  -- Insert new:
+  2  | 1001       | Boston   | 2025‑06‑01    | NULL         | Y
+  ```
+* **Use‑Cases**:
+
+  * Auditing or trend‑analysis requirements (e.g. tracking customer address history for compliance).
+  * Pricing contracts where you must see what price was in effect at any transaction date.
+  * Insurance policies where each status or coverage change must be preserved.
+
+---
+
+## 3. SCD Type 3 (Partial History)
+
+* **How it works**: You add one (or a small fixed number of) “previous” columns to hold the prior attribute value; the current column holds the latest. On change, shift current → previous, then overwrite current.
+* **Example**:
+
+  ```sql
+  CustomerID | City_Current | City_Previous
+  -----------|--------------|---------------
+  1001       | Seattle      | NULL
+
+  -- Alice moves to Boston:
+  CustomerID | City_Current | City_Previous
+  -----------|--------------|---------------
+  1001       | Boston       | Seattle
+  ```
+* **Use‑Cases**:
+
+  * When you only ever need to compare “before vs. after” (e.g. last vs. current sales territory).
+  * Light‑weight history for simple drift analysis (e.g. tracking a product’s two most recent list prices).
+  * Situations with rigid schema constraints where full row‑versioning would be overkill.
+
+---
+
+### Which One to Choose?
+
+* **SCD 1** when you don’t care about history—only the current value matters.
+* **SCD 2** when **all** historical versions are important, and you need to query “what was true on a given date.”
+* **SCD 3** when you need just the immediately preceding value (e.g. for “delta” reports) and wish to minimize storage and complexity.

@@ -1,0 +1,72 @@
+Here’s a concise rundown of the four classic fact‑table types in a dimensional data warehouse, with definitions, examples and typical use‑cases:
+
+---
+
+## 1. Transaction (Event) Fact Table
+
+* **Definition**: Records one row per business event or transaction.
+* **Grain**: One single event (e.g. a sale, a click, a shipment).
+* **Measures**: Quantities and amounts specific to the event (e.g. units sold, revenue, cost).
+* **Example**:
+
+  | DateKey  | StoreKey | ProductKey | SalesQuantity | SalesAmount | TransactionID |
+  | -------- | -------- | ---------- | ------------- | ----------- | ------------- |
+  | 20250617 | 12       | 345        | 3             | 150.00      | TXN12345      |
+* **Use‑Case**: Real‑time or batch reporting of “what happened?” — e‑commerce orders, POS receipts, web clicks.
+
+---
+
+## 2. Periodic Snapshot Fact Table
+
+* **Definition**: Captures the state of some metrics at regular intervals (daily, monthly, etc.).
+* **Grain**: One row per combination of time period and dimensional context.
+* **Measures**: Aggregates over the interval (e.g. period‑to‑date totals, balances).
+* **Example**:
+
+  | SnapshotDate | CustomerKey | TotalBalance | TotalOrders |
+  | ------------ | ----------- | ------------ | ----------- |
+  | 2025‑06‑30   | 789         | 12,450.75    | 42          |
+* **Use‑Case**: Trend analysis, period‑end balance reporting, inventory levels at month‑end.
+
+---
+
+## 3. Accumulating Snapshot Fact Table
+
+* **Definition**: Tracks the lifecycle of a process by updating milestone dates in a single row.
+* **Grain**: One row per process instance (e.g. order, loan application).
+* **Measures & Timestamps**: Includes timestamps for each stage and duration measures (e.g. time to ship).
+* **Example**:
+
+  | OrderKey | OrderDate  | ShipDate   | DeliveryDate | OrderAmount | DaysToShip | DaysToDeliver |
+  | -------- | ---------- | ---------- | ------------ | ----------- | ---------- | ------------- |
+  | 555      | 2025‑06‑10 | 2025‑06‑12 | 2025‑06‑15   | 250.00      | 2          | 3             |
+* **Use‑Case**: Monitoring and optimizing processes — order‑to‑cash cycle, loan origination, employee onboarding.
+
+---
+
+## 4. Factless Fact Table
+
+* **Definition**: Records events or coverage without numeric measures.
+* **Grain**: One row per event occurrence or coverage instance.
+* **Measures**: None (all measures are implied “1” or calculated externally).
+* **Types**:
+
+  * **Event Tracing** (e.g. student attendance, machine failures)
+  * **Coverage** (e.g. which sales promotions applied to which products on which dates)
+* **Example (Attendance)**:
+
+  | DateKey    | StudentKey | ClassKey |
+  | ---------- | ---------- | -------- |
+  | 2025‑06‑17 | 1024       | ENG101   |
+* **Use‑Case**: Counting or enforcing business rules — “how many students missed class?”, “which products lacked promotional coverage?”
+
+---
+
+### Choosing the Right Type
+
+* **High‑volume events** → Transaction facts
+* **Regular snapshots/trends** → Periodic snapshot
+* **End‑to‑end process tracking** → Accumulating snapshot
+* **Event occurrences or coverage tracking** → Factless facts
+
+Each type addresses a distinct analytical need—pick the one whose grain and update pattern best matches your business question.
